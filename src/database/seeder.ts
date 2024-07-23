@@ -1,22 +1,22 @@
-import { NestFactory } from '@nestjs/core';
-import { getConnectionOptions, createConnection } from 'typeorm';
-import { AppModule } from '../app.module';
+import { DataSource } from 'typeorm';
 import { Sensor } from '../sensors/entities/sensor.entity';
 import { SensorData } from '../sensors/entities/sensor-data.entity';
 import { faker } from '@faker-js/faker';
 
 async function seed() {
-  const app = await NestFactory.create(AppModule);
-
-  // Get the connection options from ormconfig
-  const connectionOptions = await getConnectionOptions();
-
-  // Create a new connection with entities explicitly specified
-  const connection = await createConnection({
-    ...connectionOptions,
-    synchronize: true,
+  const AppDataSource = new DataSource({
+    // eslint-disable-next-line prettier/prettier
+    type: "sqlite",
+    database: 'database.sqlite',
     entities: [Sensor, SensorData],
+    synchronize: true, // Set to true for initial setup
+    logging: false,
   });
+
+  await AppDataSource.initialize();
+
+  const sensorRepository = AppDataSource.getRepository(Sensor);
+  const sensorDataRepository = AppDataSource.getRepository(SensorData);
 
   const sensorTypes = [
     'temperature',
@@ -29,45 +29,43 @@ async function seed() {
   for (const type of sensorTypes) {
     const sensor = new Sensor();
     sensor.type = type;
-    await connection.manager.save(sensor);
+    await sensorRepository.save(sensor);
 
     const sensorData = Array(100)
       .fill(null)
       .map(() => {
         const data = new SensorData();
-        data.recorded_at = faker.date.between(
-          '2023-01-01T00:00:00.000Z',
-          '2024-07-23T00:00:00.000Z',
-        );
+        data.recorded_at = faker.date.between('2023-01-01', '2024-07-23');
         data.value = generateRealisticValue(type);
         data.sensor = sensor;
         return data;
       });
 
-    await connection.manager.save(sensorData);
+    await sensorDataRepository.save(sensorData);
   }
 
-  console.log('Seeding complete!');
-  await connection.close();
-  await app.close();
+  await AppDataSource.destroy();
+  console.log('Seeding completed');
 }
 
 function generateRealisticValue(sensorType: string): string {
   switch (sensorType) {
     case 'temperature':
-      return faker.number
-        .float({ min: -10, max: 40, precision: 0.1 })
+      return faker.datatype
+        .number({ min: -10, max: 40, precision: 0.1 })
         .toFixed(1);
     case 'humidity':
-      return faker.number
-        .float({ min: 0, max: 100, precision: 0.1 })
+      return faker.datatype
+        .number({ min: 0, max: 100, precision: 0.1 })
         .toFixed(1);
     case 'pressure':
-      return faker.number
-        .float({ min: 950, max: 1050, precision: 0.1 })
+      return faker.datatype
+        .number({ min: 950, max: 1050, precision: 0.1 })
         .toFixed(1);
     case 'light':
-      return faker.number.int({ min: 0, max: 1000 }).toString();
+      return faker.datatype
+        .number({ min: 0, max: 1000, precision: 1 })
+        .toFixed(0);
     case 'motion':
       return faker.datatype.boolean() ? '1' : '0';
     default:

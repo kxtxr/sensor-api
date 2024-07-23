@@ -6,12 +6,12 @@ export class SensorData {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'timestamp' })
+  @Column('datetime')
   recorded_at: Date;
 
   @Column()
   value: string;
 
-  @ManyToOne(() => Sensor, sensor => sensor.data)
+  @ManyToOne(() => Sensor, (sensor) => sensor.data)
   sensor: Sensor;
 }
