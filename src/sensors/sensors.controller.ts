@@ -11,7 +11,11 @@ export class SensorsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all sensors' })
-  @ApiResponse({ status: 200, description: 'Successful response', type: SensorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful response',
+    type: SensorResponseDto,
+  })
   async findAll(): Promise<SensorResponseDto> {
     const sensors = await this.sensorsService.findAll();
     return { data: sensors };
@@ -19,13 +23,17 @@ export class SensorsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get data about a particular sensor' })
-  @ApiResponse({ status: 200, description: 'Successful response', type: SensorDetailResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful response',
+    type: SensorDetailResponseDto,
+  })
   async findOne(@Param('id') id: string): Promise<SensorDetailResponseDto> {
     const sensor = await this.sensorsService.findOne(id);
     return {
       sensor_id: sensor.id,
       type: sensor.type,
-      data: sensor.data.map(d => ({
+      data: sensor.data.map((d) => ({
         recorded_at: d.recorded_at.toISOString(),
         value: d.value,
       })),

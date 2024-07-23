@@ -6,6 +6,6 @@ module.exports = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   entities: ['dist/**/*.entity{.ts,.js}'],
-  seeds: ['src/database/seeds/**/*{.ts,.js}'],
+  // seeds: ['src/database/seeds/**/*{.ts,.js}'],
   factories: ['src/database/factories/**/*{.ts,.js}'],
 };
